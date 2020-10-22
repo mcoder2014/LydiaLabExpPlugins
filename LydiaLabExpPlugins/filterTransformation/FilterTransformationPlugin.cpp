@@ -2,9 +2,11 @@
 
 #include <iostream>
 
+#include <Eigen/Dense>
 #include <parameters/RichParameterWidget.h>
 
 #include "TransformRichParameterWidget.h"
+#include "TransformationTool.h"
 
 /**
  * @brief FilterTransformationPlugin::initParameters
@@ -34,5 +36,12 @@ void FilterTransformationPlugin::applyFilter(RichParameterSet *richParameterSet)
  */
 bool FilterTransformationPlugin::isApplicable(Starlab::Model *model)
 {
-    return model != nullptr;
+    if(model == nullptr)
+        return false;
+
+    // 转换为 model
+    SurfaceMeshModel* surfaceMeshModel = safeCast(model);
+    if(!TransformationTool::checkTransformationInfo(surfaceMeshModel)) {
+        TransformationTool::injectTransformationInfo(surfaceMeshModel);
+    }
 }
