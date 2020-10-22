@@ -11,14 +11,18 @@ class FilterTransformationPlugin
     Q_INTERFACES(FilterPlugin)
 
 public:
-    QString name() { return "Transformation | Position"; }
-    QString description() { return "Transformation"; }
+    virtual QString name() override { return "Transformation | Position"; }
+    virtual QString description() override { return "Transformation"; }
 
     // 初始化参数窗口
-    void initParameters(RichParameterSet *richParameterSet);
+    virtual void initParameters(RichParameterSet *richParameterSet) override;
 
     // 应用
-    void applyFilter(RichParameterSet* richParameterSet);
+    virtual void applyFilter(RichParameterSet* richParameterSet) override;
+
+    // FilterPlugin interface
+public:
+    virtual bool isApplicable(Starlab::Model *model) override;
 };
 
 #endif // FILTERTRANSFORMATIONPLUGIN_H

@@ -4,7 +4,12 @@ include($$PWD/../depends/eigen.pri)
 StarlabTemplate(plugin)
 
 SOURCES += main.cpp \
-    FilterTransformationPlugin.cpp
+    FilterTransformationPlugin.cpp \
+    TransformRichParameterWidget.cpp
 
 HEADERS += \
-    FilterTransformationPlugin.h
+    FilterTransformationPlugin.h \
+    TransformRichParameterWidget.h
+
+FORMS += \
+    TransformRichParameterWidget.ui

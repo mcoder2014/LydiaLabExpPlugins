@@ -4,14 +4,17 @@
 
 #include <parameters/RichParameterWidget.h>
 
+#include "TransformRichParameterWidget.h"
+
 /**
  * @brief FilterTransformationPlugin::initParameters
  * @param richParameterSet
  */
 void FilterTransformationPlugin::initParameters(RichParameterSet *richParameterSet)
 {
-    richParameterSet->addParam(new RichInt("test"));
-    std::cout << "initParameters:" << __FUNCTION__ << __LINE__ << std::endl;
+    richParameterSet->addParam(
+                new TransformRichParameter("Transform", "desc", "tooltip"));
+    std::cout << __PRETTY_FUNCTION__ << __LINE__ << std::endl;
 }
 
 /**
@@ -20,5 +23,16 @@ void FilterTransformationPlugin::initParameters(RichParameterSet *richParameterS
  */
 void FilterTransformationPlugin::applyFilter(RichParameterSet *richParameterSet)
 {
-    std::cout << "applyFilter:" << __FUNCTION__ << __LINE__ << std::endl;
+    std::cout << __PRETTY_FUNCTION__ << __LINE__ << std::endl;
+}
+
+/**
+ * @brief FilterTransformationPlugin::isApplicable
+ * 可使用条件，非空
+ * @param model
+ * @return
+ */
+bool FilterTransformationPlugin::isApplicable(Starlab::Model *model)
+{
+    return model != nullptr;
 }
