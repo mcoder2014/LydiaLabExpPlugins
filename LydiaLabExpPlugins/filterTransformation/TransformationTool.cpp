@@ -19,5 +19,5 @@ TransformationTool::TransformationTool()
  */
 void TransformationTool::injectTransformationInfo(SurfaceMesh::SurfaceMeshModel *model)
 {
-    model->add_vertex_property(TRANSFORMATION_PROPERTY_NAME, Eigen::Vector3d(0.0));
+    model->add_vertex_property(TRANSFORMATION_PROPERTY_NAME, Eigen::Vector3d(.0,.0,.0));
 }
