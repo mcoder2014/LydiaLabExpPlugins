@@ -1,28 +1,62 @@
 #ifndef FILTERTRANSFORMATIONPLUGIN_H
 #define FILTERTRANSFORMATIONPLUGIN_H
 
+
+#include "interfaces/ModePluginDockWidget.h"
 #include "SurfaceMeshPlugins.h"
 
-class FilterTransformationPlugin
-        :public SurfaceMeshFilterPlugin
+class TransformationWidget;
+
+/**
+ * @brief The ModeTransformationPlugin class
+ * 调整模型位置的插件
+ *
+ */
+class ModeTransformationPlugin
+        :public SurfaceMeshModePlugin
 {
     Q_OBJECT
-    Q_PLUGIN_METADATA(IID "lydiaLab_filter_simplification.plugin.lydialab")
-    Q_INTERFACES(FilterPlugin)
+    Q_PLUGIN_METADATA(IID "lydiaLab_mode_transformation.plugin.lydialab")
+    Q_INTERFACES(ModePlugin)
 
 public:
-    virtual QString name() override { return "Transformation | Position"; }
+    ModeTransformationPlugin();
+    virtual ~ModeTransformationPlugin() override{}
+
+    virtual QString name() override { return "Transformation"; }
+    virtual QIcon icon() override {return QIcon(":/resources/Axis.png");}
     virtual QString description() override { return "Transformation"; }
 
-    // 初始化参数窗口
-    virtual void initParameters(RichParameterSet *richParameterSet) override;
-
-    // 应用
-    virtual void applyFilter(RichParameterSet* richParameterSet) override;
-
-    // FilterPlugin interface
 public:
-    virtual bool isApplicable(Starlab::Model *model) override;
+
+    virtual void create() override;
+    virtual void destroy() override;
+    virtual bool documentChanged() override { return true; }
+
+    // 检查插件启动条件
+    virtual bool isApplicable() override;
+
+    virtual void suspend() override;
+    virtual void resume() override;
+
+    virtual QString filter() override {
+        return QString("model (*.stl *.obj *.ply)"); }
+
+private:
+    TransformationWidget* transformationWidget;
+    ModePluginDockWidget* controlDockWidget;
+
+    // 建立链接
+    void initConnections();
+
+    // 断开链接
+    void releaseConnections();
+
+private slots:
+    // 处理 Document 中当前选中的模型发生改变事件
+    void selectionChanged(Model* model);
+    void applyTransform(Vector3d position, Vector3d rotation,
+                        Vector3d scale, Vector3d size);
 };
 
 #endif // FILTERTRANSFORMATIONPLUGIN_H

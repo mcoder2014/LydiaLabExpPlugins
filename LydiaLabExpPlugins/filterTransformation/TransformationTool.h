@@ -9,24 +9,12 @@
 
 using Eigen::Vector3d;
 
-class TransformationTool
-{
-public:
-    TransformationTool();
-
-    // 隐藏在 SurfaceMeshModel 的某个属性中
-    static const std::string TRANSFORMATION_PROPERTY_NAME;
-    static const size_t POSITION_INDEX;
-    static const size_t ROTATION_INDEX;
-    static const size_t SCALE_INDEX;
-
-    // 给一个模型注入位移信息
-    static void injectTransformationInfo(SurfaceMesh::SurfaceMeshModel *model);
-
-    // 检查模型是否含有位移信息
-    static bool checkTransformationInfo(SurfaceMesh::SurfaceMeshModel *model){
-        return model->has_vertex_property<Vector3d>(TRANSFORMATION_PROPERTY_NAME);
-    }
-};
+/**
+ * @brief transform
+ * 对模型执行变换
+ * @param mesh
+ * @param transformMatrix
+ */
+void transformation(Surface_mesh* mesh, Eigen::Matrix4d transformMatrix);
 
 #endif // TRANSFORMATIONTOOL_H

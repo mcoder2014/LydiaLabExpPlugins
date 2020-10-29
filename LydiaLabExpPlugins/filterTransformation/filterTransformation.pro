@@ -3,7 +3,7 @@ include($$[SURFACEMESH])
 include($$PWD/../depends/eigen.pri)
 StarlabTemplate(plugin)
 
-SOURCES += main.cpp \
+SOURCES += \
     FilterTransformationPlugin.cpp \
     TransformRichParameterWidget.cpp \
     TransformationTool.cpp
@@ -15,3 +15,6 @@ HEADERS += \
 
 FORMS += \
     TransformRichParameterWidget.ui
+
+RESOURCES += \
+    transformationpluginresource.qrc
