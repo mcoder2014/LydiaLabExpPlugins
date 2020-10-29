@@ -70,6 +70,7 @@ SurfaceMeshModel* IOAssimp::convert(const aiMesh * aimesh) {
 
     mesh->update_vertex_normals();
     mesh->update_face_normals();
+    mesh->updateBoundingBox();
     return mesh;
 }
 
@@ -136,6 +137,7 @@ void IOAssimp::save(Model *, QString )
 int IOAssimp::getRepeatVertexIdx(Vector3 &v)
 {
     int idx = -1;
+    if(unrepeatVertexList.size() == 0) return idx;
     for (size_t i = unrepeatVertexList.size() - 1; i != 0; i--)
     {
         if (std::abs(unrepeatVertexList[i][0] - v[0]) < 0e-5

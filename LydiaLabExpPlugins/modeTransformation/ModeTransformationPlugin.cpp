@@ -1,11 +1,11 @@
-#include "FilterTransformationPlugin.h"
+#include "ModeTransformationPlugin.h"
 
 #include <iostream>
 
 #include <Eigen/Dense>
 #include <parameters/RichParameterWidget.h>
 
-#include "TransformRichParameterWidget.h"
+#include "TransformationWidget.h"
 #include "TransformationTool.h"
 
 

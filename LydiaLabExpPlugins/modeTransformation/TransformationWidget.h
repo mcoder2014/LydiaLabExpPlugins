@@ -12,7 +12,7 @@ using Eigen::AlignedBox3d;
 #define PI 3.1415926
 
 namespace Ui {
-class TransformRichParameterWidget;
+class TransformationWidget;
 }
 
 /**
@@ -38,7 +38,7 @@ public:
             Vector3d scale, AlignedBox3d bbox);
 
 private:
-    Ui::TransformRichParameterWidget *ui;
+    Ui::TransformationWidget *ui;
 
     inline double rad2ang(const double& rad) {return rad * 180 / PI;}
     inline double ang2rad(const double& ang) {return ang * PI / 180;}

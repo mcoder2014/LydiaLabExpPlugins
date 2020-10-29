@@ -31,6 +31,10 @@ SurfaceMesh::SurfaceMeshModel *Convertor::mesh2SurfaceMeshModel(const Mesh &mesh
         model->add_face(vface);
     }
 
+    model->update_vertex_normals();
+    model->update_face_normals();
+    model->updateBoundingBox();
+
     return model;
 }
 

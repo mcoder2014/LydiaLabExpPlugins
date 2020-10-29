@@ -1,6 +1,6 @@
 TEMPLATE = subdirs
 
 SUBDIRS += \
-    filterTransformation \
+    modeTransformation \
     ioAssimp \
     ioOpenMesh

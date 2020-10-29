@@ -1,11 +1,9 @@
-#include "TransformRichParameterWidget.h"
-#include "ui_TransformRichParameterWidget.h"
+#include "TransformationWidget.h"
+#include "ui_TransformationWidget.h"
 
 #include <iostream>
 
 #include "TransformationTool.h"
-
-
 
 using namespace SurfaceMesh;
 
@@ -17,7 +15,7 @@ using namespace SurfaceMesh;
  */
 TransformationWidget::TransformationWidget(
         QWidget *parent)
-            :QWidget(parent), ui(new Ui::TransformRichParameterWidget)
+            :QWidget(parent), ui(new Ui::TransformationWidget)
 {
     // 构建 UI 样式
     ui->setupUi(this);
