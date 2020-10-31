@@ -5,6 +5,7 @@ SUBDIRS += \
     filterMirror \
     filterRemeshBottom \
     filterRevertFaceNormal \
+    modeDebug \
     modeTransformation \
     ioAssimp \
     ioOpenMesh

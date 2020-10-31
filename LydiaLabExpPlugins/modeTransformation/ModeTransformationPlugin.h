@@ -23,9 +23,9 @@ public:
     ModeTransformationPlugin();
     virtual ~ModeTransformationPlugin() override{}
 
-    virtual QString name() override { return "Transformation"; }
+    virtual QString name() override { return tr("Transformation"); }
     virtual QIcon icon() override {return QIcon(":/resources/Axis.png");}
-    virtual QString description() override { return "Transformation"; }
+    virtual QString description() override { return tr("Transformation"); }
 
 public:
 
