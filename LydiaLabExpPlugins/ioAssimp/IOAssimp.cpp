@@ -90,29 +90,14 @@ Starlab::Model *IOAssimp::open(QString path)
     try {
 
         const aiScene *scene = importer.ReadFile(
-            path.toStdString(),aiProcess_Triangulate);
+                    path.toStdString(),aiProcess_Triangulate);
 
-        if(scene == nullptr){
-            std::cerr << "Load file: " << path.toStdString()
-                      << " failed.\n scene == nullptr Error:"
-                      << importer.GetErrorString() << std::endl;
-            return new SurfaceMeshModel();
-        }
-
-        // Output the detail of the scene
-        std::cout << "Scene details of: " << path.toStdString() << "\n"
-                  << "Meshs: " << scene->mNumMeshes  << std::endl;
-
-        // Read mesh from the scene
-        if(scene->mNumMeshes <= 0 )
-        {
-            std::cerr << "There are not mesh in the file: "
-                      << path.toStdString() << std::endl;
+        if(scene == nullptr || scene->mNumMeshes <= 0 ){
             return new SurfaceMeshModel();
         }
 
         // Read mesh Only load the first mesh;
-        return convert(scene->mMeshes[0]);
+        mesh = convert(scene->mMeshes[0]);
     }
     catch (...)
     {
@@ -120,6 +105,11 @@ Starlab::Model *IOAssimp::open(QString path)
                   << importer.GetErrorString() << std::endl;
         return new SurfaceMeshModel();
     }
+
+    // mesh name
+    QFileInfo fileinfo(path);
+    mesh->name = fileinfo.baseName();
+    mesh->path = fileinfo.absolutePath();
 
     return mesh;
 }

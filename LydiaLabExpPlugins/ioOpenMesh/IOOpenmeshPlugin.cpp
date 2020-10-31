@@ -21,7 +21,14 @@ Starlab::Model *IOOpenmeshPlugin::open(QString path)
     OpenMesh::IO::read_mesh(mesh, path.toStdString());
 
     Convertor convertor;
-    return convertor.mesh2SurfaceMeshModel(mesh);
+    SurfaceMesh::SurfaceMeshModel* model = convertor.mesh2SurfaceMeshModel(mesh);
+
+    // mesh name
+    QFileInfo fileinfo(path);
+    model->name = fileinfo.baseName();
+    model->path = fileinfo.absolutePath();
+
+    return model;
 }
 
 /**
