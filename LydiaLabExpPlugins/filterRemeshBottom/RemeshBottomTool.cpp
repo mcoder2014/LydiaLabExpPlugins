@@ -8,6 +8,7 @@
 using Eigen::Vector3d;
 using Eigen::Matrix4d;
 using SurfaceMesh::SurfaceMeshModel;
+using SurfaceMesh::Point;
 using std::vector;
 using std::map;
 using std::pair;
@@ -33,7 +34,7 @@ using std::pair;
 SurfaceMesh::SurfaceMeshModel *remeshBottom(SurfaceMeshModel* srcModel,
                                             Eigen::Vector3d direction,
                                             double intervalX, double intervalY){
-    SurfaceMeshModel::Vertex_property<SurfaceMesh::Point> verticesProperty;
+    SurfaceMeshModel::Vertex_property<Point> verticesProperty = srcModel->vertex_coordinates();
 
     /// 用模型上任一顶点找到转移矩阵 将模型的坐标转换到射线方向所在的坐标系
     Matrix4d transformaMatrix = getTransformMatrix( direction,
@@ -52,8 +53,14 @@ SurfaceMesh::SurfaceMeshModel *remeshBottom(SurfaceMeshModel* srcModel,
 
     // 找到投影方向包围盒
     Eigen::AlignedBox2d boundingBox = getBoundingBox2d(pointsMatrix);
+    {
+        // 1.2 倍扩充包围盒
+        Eigen::Vector2d size = boundingBox.max() - boundingBox.min();
+        boundingBox.extend(boundingBox.min() - 0.1 * size);
+        boundingBox.extend(boundingBox.max() + 0.1 * size);
+    }
 
-    /// 找到最深处顶点的深度 depth， 并在该深度平面构建采样网格
+    /// 找到最深处顶点的深度 depth， 并在指定在多少深度平面处构建采样网格
     double depth = getLowestPoint(pointsMatrix).z() - 100.0;
     vector<vector<Vector3d>> sampleGrid = getSampleGrid(
                 boundingBox, intervalX, intervalY, depth);
@@ -64,10 +71,7 @@ SurfaceMesh::SurfaceMeshModel *remeshBottom(SurfaceMeshModel* srcModel,
     return remeshBottom(sampleGrid, direction, octree);
 }
 
-bool isZero(double value) {
-    return value < 0.000001 && value > -0.000001;
-}
-
+//bool isZero(double value) {return value < 0.000001 && value > -0.000001;}
 /**
  * @brief getTransformMatrix
  * 构建出世界坐标到 以-顶点和以法向量构成的坐标系的转移矩阵 M
@@ -97,8 +101,10 @@ Eigen::Matrix4d getTransformMatrix(Eigen::Vector3d direction, Eigen::Vector3d or
     c = direction.z();
     d = direction.x() * origin.x() + direction.y() * origin.y() + direction.z() * origin.z();
 
-    /// 从平面上任选一点作为 X
+    /// 从平面上任选一点作为 组件 OX 向量，倾向于选择 X = 0 Y = 0 求解 Z
     Vector3d pointX;
+    auto isZero = [](double value)->bool{return value < 0.000001 && value > -0.000001;};
+
     if(isZero(b) && isZero(c)) {
         // 如果 x 一定不能为 0
         pointX.y() = 0;
@@ -127,15 +133,15 @@ Eigen::Matrix4d getTransformMatrix(Eigen::Vector3d direction, Eigen::Vector3d or
     OZ.normalize();
 
     Matrix4d transformMatrix = Matrix4d::Identity();
-    transformMatrix.topLeftCorner(3,3) << OX,OY,OZ;
-    transformMatrix = transformMatrix.inverse();
-    return transformMatrix;
+    transformMatrix.topLeftCorner(3,3) << OX, OY, OZ;
+    return transformMatrix.transpose().inverse();
 }
 
 /**
  * @brief getSampleGrid
  * 生成采样网格
- * 1. 在当前坐标系按指定方式生成采样网格
+ * 1. 计算
+ * 在当前坐标系按指定方式生成采样网格
  * @param boundingBox
  * @param intervalX
  * @param intervalY
@@ -146,20 +152,18 @@ std::vector<std::vector<Eigen::Vector3d> > getSampleGrid(
         Eigen::AlignedBox2d boundingBox,
         double intervalX, double intervalY, double depth)
 {
+    /// 计算采样矩阵的尺寸
     Eigen::Vector2d boundingBoxSize = boundingBox.max() - boundingBox.min();
-
     Eigen::Vector2i samplePointCount(
                 static_cast<int>(boundingBoxSize.x() / intervalX),
                 static_cast<int>(boundingBoxSize.y() / intervalY));
 
-    // 采样点
+    // 初始化采样矩阵
     vector<vector<Vector3d>> samplePoints(static_cast<size_t>(samplePointCount.x()),
         vector<Vector3d>(static_cast<size_t>(samplePointCount.y()), Vector3d::Ones()));
 
-    Eigen::Vector3d tmpPoint(
-                boundingBox.min().x(),
-                boundingBox.min().y(),
-                depth);
+    Eigen::Vector3d tmpPoint;
+    tmpPoint << boundingBox.min(), depth;
 
     // 初始化采样点的坐标
     for(size_t i = 0; i < static_cast<size_t>(samplePointCount.x()); i++) {
@@ -168,7 +172,7 @@ std::vector<std::vector<Eigen::Vector3d> > getSampleGrid(
             tmpPoint.y() += intervalY;
         }
         tmpPoint.x() += intervalX;
-        tmpPoint.y() = boundingBox.min().y() + (i + 1) * intervalY;
+        tmpPoint.y() = boundingBox.min().y();
     }
 
     return samplePoints;
@@ -189,7 +193,7 @@ void transform(std::vector<std::vector<Eigen::Vector3d> > &sampleGrid, Eigen::Ma
     size_t idx;
     for(size_t i = 0; i < countX; i++) {
         for(size_t j = 0; j < countY; j++) {
-            idx = i * countX + j;
+            idx = i * countY + j;
             pointsMatrix(0, static_cast<int>(idx)) = sampleGrid[i][j].x();
             pointsMatrix(1, static_cast<int>(idx)) = sampleGrid[i][j].y();
             pointsMatrix(2, static_cast<int>(idx)) = sampleGrid[i][j].z();
@@ -200,7 +204,7 @@ void transform(std::vector<std::vector<Eigen::Vector3d> > &sampleGrid, Eigen::Ma
 
     for(size_t i = 0; i < countX; i++) {
         for(size_t j = 0; j < countY; j++) {
-            idx = i * countX + j;
+            idx = i * countY + j;
             sampleGrid[i][j].x() = pointsMatrix(0, static_cast<int>(idx));
             sampleGrid[i][j].y() = pointsMatrix(1, static_cast<int>(idx));
             sampleGrid[i][j].z() = pointsMatrix(2, static_cast<int>(idx));
@@ -234,14 +238,14 @@ Eigen::AlignedBox2d getBoundingBox2d(Eigen::MatrixXd &pointsMatrix)
  */
 Eigen::Vector3d getLowestPoint(Eigen::MatrixXd &pointsMatrix)
 {
-    double minimum = static_cast<double>(MAXFLOAT);
+    double minimum = static_cast<double>(pointsMatrix(2, 0));
     int idx = 0;
 
     int size = static_cast<int>(pointsMatrix.cols());
     Eigen::Vector2d tmpPoint;
     for(int i = 0; i < size; i++) {
-        if(pointsMatrix(0, i) < minimum) {
-            minimum = pointsMatrix(0, i);
+        if(pointsMatrix(2, i) < minimum) {
+            minimum = pointsMatrix(2, i);
             idx = i;
         }
     }
@@ -254,42 +258,44 @@ Eigen::Vector3d getLowestPoint(Eigen::MatrixXd &pointsMatrix)
     return lowestPoint;
 }
 
-inline int getVertexIndex(int i, int j, map<pair<int, int>, int>& indexMap) {
-    if(indexMap.find(pair<int, int>(i, j)) != indexMap.end()) {
-        return indexMap[pair<int, int>(i, j)];
-    }
-    return -1;
-}
-
 /**
  * @brief addFace
  * 辅助函数，往模型中添加顶点
+ * 1. 需要指定顶点已经存在于模型中才可添加面片
  * @param model
  * @param i
  * @param j
  * @param indexMap
  */
 void addFace(SurfaceMeshModel *model, int i, int j, map<pair<int, int>, int>& indexMap){
-    int idxA = getVertexIndex(i, j, indexMap);
-    int idxB = getVertexIndex(i, j + 1, indexMap);
-    int idxC = getVertexIndex(i + 1, j, indexMap);
-    int idxD = getVertexIndex(i + 1, j + 1, indexMap);
 
+    /// lambda 查找指定顶点的编号
+    auto getVertexIndex = [&indexMap](int i, int j) {
+        if(indexMap.find(pair<int, int>(i, j)) != indexMap.end()) {
+            return indexMap[pair<int, int>(i, j)];
+        }
+        return -1;
+    };
+
+    int idxA = getVertexIndex(i, j);
+    int idxB = getVertexIndex(i, j + 1);
+    int idxC = getVertexIndex(i + 1, j);
+    int idxD = getVertexIndex(i + 1, j + 1);
+
+    /// 添加面片
     vector<SurfaceMeshModel::Vertex> face;
-    if(idxA != -1 && idxB != -1 && idxC != -1) {
-        face.push_back(SurfaceMeshModel::Vertex(idxD));
-        face.push_back(SurfaceMeshModel::Vertex(idxB));
-        face.push_back(SurfaceMeshModel::Vertex(idxA));
-        model->add_face(face);
-    }
-
-    if(idxA != -1 && idxD != -1 && idxC != -1) {
+    auto addFace = [&face, model](int a, int b, int c) {
         face.clear();
-        face.push_back(SurfaceMeshModel::Vertex(idxC));
-        face.push_back(SurfaceMeshModel::Vertex(idxD));
-        face.push_back(SurfaceMeshModel::Vertex(idxA));
-        model->add_face(face);
-    }
+        if(a != -1 && b != -1 && c != -1) {
+            face.push_back(SurfaceMeshModel::Vertex(a));
+            face.push_back(SurfaceMeshModel::Vertex(b));
+            face.push_back(SurfaceMeshModel::Vertex(c));
+            model->add_face(face);
+        }
+    };
+
+    addFace(idxD, idxB, idxA);
+    addFace(idxC, idxD, idxA);
 }
 
 /**
@@ -313,6 +319,46 @@ SurfaceMesh::SurfaceMeshModel *remeshBottom(
 
     // 记录 grid 顶点对应的索引
     map<pair<int, int>, int> indexMap;
+
+    size_t countX = sampleGrid.size();
+    size_t countY = sampleGrid[0].size();
+    int faceIndex;
+
+    for(size_t i = 0; i < countX; i++) {
+        for(size_t j = 0; j < countY; j++) {
+            Ray ray(sampleGrid[i][j], direction, 0.000001);
+            faceIndex = -1;
+            Vector3d intersectPoint = octree.closestIntersectionPoint(ray, &faceIndex);
+            if(faceIndex > 0) {
+                // 有交点的面片加入网格
+                SurfaceMeshModel::Vertex vertex = model->add_vertex(intersectPoint);
+                indexMap[pair<int, int>(i, j)] = vertex.idx();
+            }
+        }
+    }
+
+    // 建立网格链接
+    for(int i = 0; i < static_cast<int>(countX - 1); i++) {
+        for(int j = 0; j < static_cast<int>(countY - 1); j++) {
+            addFace(model, i, j, indexMap);
+        }
+    }
+
+    return model;
+}
+/**
+ * @brief debugSampleGrid
+ * DEBUG 目的
+ * 将采样点矩阵生成 SurfaceMeshModel
+ * @param sampleGrid
+ * @return
+ */
+SurfaceMesh::SurfaceMeshModel *debugSampleGrid(std::vector<std::vector<Eigen::Vector3d> > &sampleGrid)
+{
+    SurfaceMeshModel *model = new SurfaceMeshModel;
+
+    // 记录 grid 顶点对应的索引
+    map<pair<int, int>, int> indexMap;
     Vector3d startPoint;
 
     size_t countX = sampleGrid.size();
@@ -320,13 +366,8 @@ SurfaceMesh::SurfaceMeshModel *remeshBottom(
     for(size_t i = 0; i < countX; i++) {
         for(size_t j = 0; j < countY; j++) {
             startPoint = sampleGrid[i][j];
-            Ray ray(startPoint, direction, 0.000001);
-            int faceIndex = -1;
-            Vector3d intersectPoint = octree.closestIntersectionPoint(ray, &faceIndex);
-            if(faceIndex > 0) {
-                SurfaceMeshModel::Vertex vertex = model->add_vertex(intersectPoint);
-                indexMap[pair<int, int>(i, j)] = vertex.idx();
-            }
+            SurfaceMeshModel::Vertex vertex = model->add_vertex(startPoint);
+            indexMap[pair<int, int>(i, j)] = vertex.idx();
         }
     }
 

@@ -73,7 +73,7 @@ public:
         // Fast, not robust tests
         foreach( int i, intersectRay( ray, 0, false ) )
         {
-            intersectionTestAccelerated(SurfaceMesh::Model::Face(i), ray, res);
+            intersectionTestAccelerated(Surface_mesh::Face(i), ray, res);
 
             // find the nearest intersection point
             if(res.hit)
@@ -93,7 +93,7 @@ public:
             // Slower, more robust tests
             if(!best_res.hit){
                 foreach( int i, intersectRay( ray, 0.01, false ) ){
-                    rayTriangleIntersectionTest(SurfaceMesh::Model::Face(i), ray, res, false);
+                    rayTriangleIntersectionTest(Surface_mesh::Face(i), ray, res, false);
                     if(res.hit){
                         if (res.distance < minDistance){
                             minDistance = res.distance;

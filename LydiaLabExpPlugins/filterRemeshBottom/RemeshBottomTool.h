@@ -32,6 +32,8 @@ std::vector<std::vector<Vector3d>> getSampleGrid(
         Eigen::AlignedBox2d boundingBox,
         double intervalX, double intervalY, double depth);
 
+SurfaceMesh::SurfaceMeshModel *debugSampleGrid(std::vector<std::vector<Vector3d>>& sampleGrid);
+
 // 对转移矩阵执行坐标变换
 void transform(std::vector<std::vector<Vector3d>>& sampleGrid, Matrix4d transformMatrix);
 
