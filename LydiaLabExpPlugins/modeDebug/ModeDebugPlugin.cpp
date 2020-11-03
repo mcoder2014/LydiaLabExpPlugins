@@ -10,17 +10,15 @@ ModeDebugPlugin::ModeDebugPlugin()
 
 void ModeDebugPlugin::create()
 {
-    if(modeDebugPluginWidget || controlDockWidget) {
-        controlDockWidget->setVisible(true);
-        return;
+    if( !modeDebugPluginWidget && !controlDockWidget) {
+        controlDockWidget = new ModePluginDockWidget(tr("Debug Tool"), mainWindow());
+        modeDebugPluginWidget = new ModeDebugPluginWidget;
+        controlDockWidget->setWidget(modeDebugPluginWidget);
+        controlDockWidget->setFeatures(QDockWidget::NoDockWidgetFeatures);
+        mainWindow()->addDockWidget(Qt::RightDockWidgetArea, controlDockWidget);
     }
 
-    controlDockWidget = new ModePluginDockWidget(tr("Debug Tool"), mainWindow());
-    modeDebugPluginWidget = new ModeDebugPluginWidget;
-    controlDockWidget->setWidget(modeDebugPluginWidget);
-    controlDockWidget->setFeatures(QDockWidget::NoDockWidgetFeatures);
-    mainWindow()->addDockWidget(Qt::RightDockWidgetArea, controlDockWidget);
-
+    controlDockWidget->setVisible(true);
     initConnections();
 }
 

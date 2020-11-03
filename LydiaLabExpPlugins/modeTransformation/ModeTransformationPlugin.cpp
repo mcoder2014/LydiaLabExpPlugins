@@ -21,20 +21,17 @@ ModeTransformationPlugin::ModeTransformationPlugin()
  */
 void ModeTransformationPlugin::create()
 {
-    // 再次进入插件
-    if(transformationWidget || controlDockWidget) {
-        controlDockWidget->setVisible(true);
-        return;
+    if(!transformationWidget && !controlDockWidget) {
+        // 初次初始化插件
+        controlDockWidget = new ModePluginDockWidget(tr("Transformation"), mainWindow());
+        transformationWidget = new TransformationWidget(controlDockWidget);
+        controlDockWidget->setWidget(transformationWidget);
+        controlDockWidget->setFeatures(QDockWidget::NoDockWidgetFeatures);
+        mainWindow()->addDockWidget(Qt::RightDockWidgetArea, controlDockWidget);
     }
 
-    // 初次初始化插件
-    controlDockWidget = new ModePluginDockWidget(
-                tr("Transformation"), mainWindow());
-    transformationWidget = new TransformationWidget(controlDockWidget);
-    controlDockWidget->setWidget(transformationWidget);
-    controlDockWidget->setFeatures(QDockWidget::NoDockWidgetFeatures);
-    mainWindow()->addDockWidget(Qt::RightDockWidgetArea, controlDockWidget);
-
+    // 显示控制界面
+    controlDockWidget->setVisible(true);
     // 建立事件处理函数链接
     initConnections();
     selectionChanged(safeCast(document()->selectedModel()));
