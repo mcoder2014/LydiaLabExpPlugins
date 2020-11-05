@@ -16,7 +16,8 @@ void FilterCopyMeshPlugin::applyFilter(RichParameterSet *richParameterSet)
     }
 
     SurfaceMeshModel* model = safeCast(document()->selectedModel());
-    SurfaceMeshModel* newModel = model->clone();
+    SurfaceMeshModel* newModel = new SurfaceMeshModel;
+    newModel->assign(*model);
     newModel->name = newName;
 
     document()->addModel(newModel);

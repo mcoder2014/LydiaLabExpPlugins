@@ -14,7 +14,8 @@ SurfaceMesh::SurfaceMeshModel *fixHole(
         int intervalPoints)
 {
     // 复制下表面作为目标模型
-    SurfaceMeshModel *destModel = bottomSurface->clone();
+    SurfaceMeshModel *destModel = new SurfaceMeshModel();
+    destModel->assign(*bottomSurface);
 
     // 用来插入做中间点
     vector<Vertex> topBoundary;
@@ -22,24 +23,20 @@ SurfaceMesh::SurfaceMeshModel *fixHole(
 
     // 下边界 boundary
     vector<Halfedge> bottomBoundary;
-    Surface_mesh::Vertex_property<Vector3d> bottomPoints = bottomSurface->vertex_coordinates();
+    Surface_mesh::Vertex_property<Vector3d> destPoints = destModel->vertex_coordinates();
 
     // 上边界 -> 下边界
     map<Vertex, Vertex> top2bottomBoundaryMap;
 
     // 下边界 -> 新加入的插值节点
-    map<Vertex, Vertex> bottom2IntervalPointsMap;
+    map<Vertex, Vertex> bottom2IntervalVertexMap;
 
-    // build topBoundary
+    // build topBoundary build initial top2bottomBoundaryMap
     for(Vertex vertex : topSurface->vertices()) {
         if(topSurface->is_boundary(vertex)){
             topBoundary.push_back(vertex);
+            top2bottomBoundaryMap[vertex] = vertex;
         }
-    }
-
-    // build top2bottomBoundaryMap
-    for (Vertex vertex : topBoundary) {
-        top2bottomBoundaryMap[vertex] = vertex;
     }
 
     /// 链接中间插值顶点
@@ -55,13 +52,15 @@ SurfaceMesh::SurfaceMeshModel *fixHole(
         /// Add interval points Pos = bottom + (i + 1)/(interval + 1) * top
         // update bottom2IntervalPointsMap
         double factor = 1.0 / (intervalPoints + 1);
-        bottom2IntervalPointsMap.clear();
+        bottom2IntervalVertexMap.clear();
         for(Vertex vertex : topBoundary) {
-            Vector3d point = bottomPoints[top2bottomBoundaryMap[vertex]];
-            point = point + factor * topPoints[vertex];
+            Vertex destBoundaryVertex = top2bottomBoundaryMap[vertex];
+            Vector3d point = destPoints[destBoundaryVertex];
+            // 因为上表面边界顶点在 destModel 中的 vertex idx 是不变的
+            point = point + factor * (topPoints[vertex] - destPoints[vertex]);
 
-            Vertex newVertex = destModel->add_vertex(point);
-            bottom2IntervalPointsMap[top2bottomBoundaryMap[vertex]] = newVertex;
+            Vertex intervalVertex = destModel->add_vertex(point);
+            bottom2IntervalVertexMap[destBoundaryVertex] = intervalVertex;
         }
 
         /// 链接下表面和中间节点
@@ -70,26 +69,26 @@ SurfaceMesh::SurfaceMeshModel *fixHole(
             // 插入两个face
             Vertex bottomA = destModel->from_vertex(halfedge);
             Vertex bottomB = destModel->to_vertex(halfedge);
-            Vertex intervalA = bottom2IntervalPointsMap[bottomA];
-            Vertex intervalB = bottom2IntervalPointsMap[bottomB];
+            Vertex intervalA = bottom2IntervalVertexMap[bottomA];
+            Vertex intervalB = bottom2IntervalVertexMap[bottomB];
 
             face.clear();
-            face.push_back(bottomB);
             face.push_back(bottomA);
+            face.push_back(bottomB);
             face.push_back(intervalB);
             destModel->add_face(face);
 
             face.clear();
             face.push_back(bottomA);
-            face.push_back(intervalA);
             face.push_back(intervalB);
+            face.push_back(intervalA);
             destModel->add_face(face);
         }
 
         /// update top2bottomBoundaryMap
         map<Vertex, Vertex> newTop2bottomBoundaryMap;
         for(std::pair<Vertex, Vertex> pair : top2bottomBoundaryMap) {
-            newTop2bottomBoundaryMap[pair.first] = bottom2IntervalPointsMap[pair.second];
+            newTop2bottomBoundaryMap[pair.first] = bottom2IntervalVertexMap[pair.second];
         }
        top2bottomBoundaryMap.swap(newTop2bottomBoundaryMap);
     }
@@ -104,10 +103,24 @@ SurfaceMesh::SurfaceMeshModel *fixHole(
     }
 
     // add Vertex
-    bottom2IntervalPointsMap.clear();
-    for(Vertex vertex : topSurface->vertices()) {
-        Vertex newVertex = destModel->add_vertex(topPoints[vertex]);
-        bottom2IntervalPointsMap[top2bottomBoundaryMap[vertex]] = newVertex;
+    map<Vertex, Vertex> top2newIdxMap;
+    bottom2IntervalVertexMap.clear();
+    for(Vertex topVertex : topSurface->vertices()) {
+        Vertex newVertex = destModel->add_vertex(topPoints[topVertex]);
+        top2newIdxMap[topVertex] = newVertex;
+        if(topSurface->is_boundary(topVertex)) {
+            bottom2IntervalVertexMap[top2bottomBoundaryMap[topVertex]] = newVertex;
+        }
+    }
+
+    // add Face
+    vector<Vertex> topFace;
+    for(Face face : topSurface->faces()) {
+        topFace.clear();
+        for(Vertex vertex : topSurface->vertices(face)) {
+            topFace.push_back(top2newIdxMap[vertex]);
+        }
+        destModel->add_face(topFace);
     }
 
     // link halfedge
@@ -116,21 +129,21 @@ SurfaceMesh::SurfaceMeshModel *fixHole(
         // 插入两个face
         Vertex bottomA = destModel->from_vertex(halfedge);
         Vertex bottomB = destModel->to_vertex(halfedge);
-        Vertex intervalA = bottom2IntervalPointsMap[bottomA];
-        Vertex intervalB = bottom2IntervalPointsMap[bottomB];
+        Vertex intervalA = bottom2IntervalVertexMap[bottomA];
+        Vertex intervalB = bottom2IntervalVertexMap[bottomB];
 
         face.clear();
-        face.push_back(bottomB);
         face.push_back(bottomA);
+        face.push_back(bottomB);
         face.push_back(intervalB);
         destModel->add_face(face);
 
         face.clear();
         face.push_back(bottomA);
-        face.push_back(intervalA);
         face.push_back(intervalB);
+        face.push_back(intervalA);
         destModel->add_face(face);
     }
 
-    return topSurface->clone();
+    return destModel;
 }

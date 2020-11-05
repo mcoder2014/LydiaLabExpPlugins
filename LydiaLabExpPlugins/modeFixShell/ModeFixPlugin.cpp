@@ -17,31 +17,29 @@ void ModeFixPlugin::create()
     if(!modeFixWidget && !modePluginDockWidget) {
         modePluginDockWidget = new ModePluginDockWidget(tr("Mode Fix"), mainWindow());
         modeFixWidget = new ModeFixWidget(modePluginDockWidget);
+        initConnections();
+
         modePluginDockWidget->setWidget(modeFixWidget);
         modePluginDockWidget->setFeatures(QDockWidget::NoDockWidgetFeatures);
         mainWindow()->addDockWidget(Qt::RightDockWidgetArea, modePluginDockWidget);
     }
 
     modePluginDockWidget->setVisible(true);
-    initConnections();
 }
 
 void ModeFixPlugin::destroy()
 {
     modePluginDockWidget->setVisible(false);
-//    releaseConnections();
 }
 
 void ModeFixPlugin::suspend()
 {
     modePluginDockWidget->setVisible(false);
-//    releaseConnections();
 }
 
 void ModeFixPlugin::resume()
 {
     modePluginDockWidget->setVisible(true);
-//    initConnections();
 }
 
 void ModeFixPlugin::apply()
@@ -58,23 +56,22 @@ void ModeFixPlugin::apply()
     model->name = modeFixWidget->ui->lineEditTargetName->text();
 
     document()->addModel(model);
+
+    mainWindow()->setStatusBarMessage("Apply successed");
 }
 
 void ModeFixPlugin::initConnections()
 {
     connect(modeFixWidget->ui->pushButtonTop, &QPushButton::clicked,
-            this, [this](){this->setSurfaceMesh(topSurface);});
+            this, [this](){this->setSurfaceMesh(topSurface);}, Qt::UniqueConnection);
     connect(modeFixWidget->ui->pushButtonBottom, &QPushButton::clicked,
-            this, [this](){this->setSurfaceMesh(bottomSurface);});
+            this, [this](){this->setSurfaceMesh(bottomSurface);},Qt::UniqueConnection);
     connect(modeFixWidget->ui->pushButtonApply, SIGNAL(clicked(bool)),
-            this, SLOT(apply()));
-}
-
-void ModeFixPlugin::releaseConnections()
-{
+            this, SLOT(apply()),Qt::UniqueConnection);
 }
 
 void ModeFixPlugin::setSurfaceMesh(SurfaceMeshModel* &model)
 {
     model = safeCast(document()->selectedModel());
+    mainWindow()->setStatusBarMessage("Set model " + model->name);
 }

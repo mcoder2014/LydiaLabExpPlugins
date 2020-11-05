@@ -14,6 +14,7 @@ using Eigen::Vector3d;
 using SurfaceMesh::SurfaceMeshModel;
 using SurfaceMesh::Halfedge;
 using SurfaceMesh::Vertex;
+using SurfaceMesh::Face;
 
 SurfaceMeshModel *fixHole(
         SurfaceMeshModel* topSurface,
