@@ -18,7 +18,7 @@ public:
     virtual QString description() override{
         return "Miirror the mesh through a plane. "; }
     virtual QString name() override{
-        return "Transformation | mirror";}
+        return "Transformation | Mirror";}
 
     // FilterPlugin interface
 public:

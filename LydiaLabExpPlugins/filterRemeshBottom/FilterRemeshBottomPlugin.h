@@ -16,7 +16,7 @@ public:
         return tr("Reconstruct model bottom using ray and sampling points");
     }
     virtual QString name() override {
-        return tr("Remesh | RemeshBottom");
+        return tr("Remesh | Remesh Bottom");
     }
 
     // FilterPlugin interface

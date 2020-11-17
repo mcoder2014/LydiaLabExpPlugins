@@ -16,7 +16,7 @@ public:
         return tr("Copy a mesh");
     }
     virtual QString name() override {
-        return tr("Duplicate Mesh");
+        return tr("Shell Tool | Duplicate Mesh");
     }
 
     // FilterPlugin interface

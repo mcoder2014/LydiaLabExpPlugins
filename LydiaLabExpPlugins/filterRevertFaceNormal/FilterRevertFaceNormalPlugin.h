@@ -17,7 +17,7 @@ public:
         return tr("Revert surfaceMeshModel through revert revert the vertex order in one face.");
     }
     virtual QString name() override {
-        return tr("RevertFaceNormal");
+        return tr("Shell Tool | Revert Face Normal");
     }
 
     // FilterPlugin interface

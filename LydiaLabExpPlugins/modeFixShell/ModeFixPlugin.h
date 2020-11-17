@@ -34,7 +34,7 @@ public:
     }
 
     virtual QString name() override{
-        return tr("Connect Top and Bottom");
+        return tr("Shell Tool | Connect Top and Bottom");
     }
 
     // ModePlugin interface
