@@ -4,7 +4,9 @@ include($$PWD/../depends/eigen.pri)
 StarlabTemplate(plugin)
 
 SOURCES += \
-    FilterMinimalSurfacePlugin.cpp
+    FilterMinimalSurfacePlugin.cpp \
+    LaplaceMinimalSurfaceTool.cpp
 
 HEADERS += \
-    FilterMinimalSurfacePlugin.h
+    FilterMinimalSurfacePlugin.h \
+    LaplaceMinimalSurfaceTool.h
