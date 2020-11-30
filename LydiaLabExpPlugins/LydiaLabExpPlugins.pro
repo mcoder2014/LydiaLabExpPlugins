@@ -8,6 +8,8 @@ SUBDIRS += \
     filterRevertFaceNormal \
     modeDebug \
     modeFixShell \
+    modePartialMorph \
     modeTransformation \
+    modeArapDeform \
     ioAssimp \
-    ioOpenMesh
+    ioOpenMesh \
