@@ -7,6 +7,7 @@ SUBDIRS += \
     filterRemeshBottom \
     filterRevertFaceNormal \
     modeDebug \
+    modeDeleteFaces \
     modeFixShell \
     modeMarchCube \
     modePartialMorph \
