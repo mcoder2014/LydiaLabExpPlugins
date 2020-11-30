@@ -8,6 +8,7 @@ SUBDIRS += \
     filterRevertFaceNormal \
     modeDebug \
     modeFixShell \
+    modeMarchCube \
     modePartialMorph \
     modeTransformation \
     modeArapDeform \
