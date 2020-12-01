@@ -9,7 +9,6 @@ SUBDIRS += \
     modeDebug \
     modeDeleteFaces \
     modeFixShell \
-    modeMarchCube \
     modePartialMorph \
     modeTransformation \
     modeArapDeform \
