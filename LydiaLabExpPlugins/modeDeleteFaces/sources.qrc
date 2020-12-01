@@ -1,0 +1,8 @@
+<RCC>
+    <qresource prefix="/">
+        <file>sources/delete_face.png</file>
+        <file>sources/erase.png</file>
+        <file>sources/deform_cursor.png</file>
+        <file>sources/paint.png</file>
+    </qresource>
+</RCC>
