@@ -26,6 +26,12 @@ enum DELETE_FACES_MODE{
     NONE, SELECT, DISSELECT
 };
 
+/**
+ * @brief The ModeDeleteFacesPlugin class
+ * 存在 bug：
+ * 1. 仅能从面的正面选择
+ * 2. 不可见的模型依旧可以选择面片
+ */
 class ModeDeleteFacesPlugin
         :public SurfaceMeshModePlugin
 {
@@ -71,13 +77,13 @@ public:
     void decorate() override;
     // 选择面片
     bool endSelection(const QPoint &point) override;
-    // 监测选择模型切换
-    bool selectionChanged();
 
 public slots:
     /// 业务代码
     // 删除面片
     void deleteFace();
+    // 监测选择模型切换
+    bool selectionChanged();
 
 private:
     // Dock Widget

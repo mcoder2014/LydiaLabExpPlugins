@@ -62,6 +62,7 @@ bool ModeDeleteFacesPlugin::selectionChanged()
 
     // clean selected faces
     this->selectedFaces.clear();
+    deleteFacesWidget->ui->faceCounts->setValue(0);
 
     points = mesh()->vertex_property<Vector3>(VPOINT);
     fnormals = mesh()->face_property<Vector3>(FNORMAL);
@@ -76,21 +77,36 @@ bool ModeDeleteFacesPlugin::selectionChanged()
 void ModeDeleteFacesPlugin::deleteFace()
 {
     SurfaceMeshModel *model = mesh();
-    for(Face face : selectedFaces) {
-        std::cout << "remove face " << face.idx() << std::endl;
-        model->remove_face(face);
+
+    /// 删除选中的面片，直接在模型上修改
+//    for(Face face : selectedFaces) {
+//        std::cout << "remove face " << face.idx() << std::endl;
+//        model->remove_face(face);
+//    }
+
+//    // 执行垃圾回收算法
+//    model->garbage_collection();
+
+//    // 重新加载 renderer
+//    model->renderer()->init();
+
+    /// tmp 先使用粗糙手段，重新构建一个SurfaceMesh。
+    vector<Face> faceSubSet;
+    for(Face face : model->faces()) {
+        if(selectedFaces.find(face) != selectedFaces.end()) {
+            continue;
+        }
+        faceSubSet.push_back(face);
     }
 
-    // 清空选中的集合
-    selectedFaces.clear();
+    SurfaceMeshModel *clone = model->clone(faceSubSet);
+    model->assign(*clone);
+    delete clone;
 
-    // 执行垃圾回收算法
-    model->garbage_collection();
-
-    // 重新加载 renderer
     model->renderer()->init();
 
-    // 更新画面
+    // 更新缓存数据 UI
+    selectionChanged();
     drawArea()->updateGL();
 }
 
@@ -100,12 +116,13 @@ void ModeDeleteFacesPlugin::deleteFace()
  */
 void ModeDeleteFacesPlugin::initConnect()
 {
+    std::cout << __PRETTY_FUNCTION__ << __LINE__ << std::endl;
     // connect 系统模型改变
     connect(document(), SIGNAL(selectionChanged(Model*)),
-            this, SLOT(selectionChanged()));
+            this, SLOT(selectionChanged()), Qt::UniqueConnection);
 
     connect(deleteFacesWidget->ui->pushButtonDelete, SIGNAL(clicked(bool)),
-            this, SLOT(deleteFace()));
+            this, SLOT(deleteFace()), Qt::UniqueConnection);
 }
 
 /**
@@ -189,6 +206,8 @@ bool ModeDeleteFacesPlugin::mouseMoveEvent(QMouseEvent *e)
 
 /**
  * @brief ModeDeleteFacesPlugin::drawWithNames
+ * 给每个三角面片都附加上名字
+ * 在 opengl GL_SELECT 模式执行，使用 OpenGL 的鼠标拾取功能
  */
 void ModeDeleteFacesPlugin::drawWithNames()
 {
@@ -198,7 +217,8 @@ void ModeDeleteFacesPlugin::drawWithNames()
 
     for(Face face: mesh()->faces())
     {
-        if(dot(fnormals[face], cameraNormal) > vt) continue;
+        if(dot(fnormals[face], cameraNormal) > vt)
+            continue;
 
         glPushName(face.idx());
         glBegin(GL_POLYGON);
