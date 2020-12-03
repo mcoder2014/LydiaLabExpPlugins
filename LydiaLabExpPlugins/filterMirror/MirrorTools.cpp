@@ -117,7 +117,7 @@ void mirror(SurfaceMesh::SurfaceMeshModel *model, std::vector<Eigen::Vector3d> f
 
         tmp->add_face(vFace);
     }
-    model->assign(*tmp);
+    model->Surface_mesh::assign(*tmp);
     delete tmp;
 
     /// 更新法线

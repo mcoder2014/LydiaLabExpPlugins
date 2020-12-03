@@ -15,7 +15,7 @@ SurfaceMesh::SurfaceMeshModel *fixHole(
 {
     // 复制下表面作为目标模型
     SurfaceMeshModel *destModel = new SurfaceMeshModel();
-    destModel->assign(*bottomSurface);
+    destModel->Surface_mesh::assign(*bottomSurface);
 
     // 用来插入做中间点
     vector<Vertex> topBoundary;

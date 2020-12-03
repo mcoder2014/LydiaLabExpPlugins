@@ -27,6 +27,8 @@ public:
     explicit TransformationWidget(QWidget *parent);
     ~TransformationWidget();
 
+    Ui::TransformationWidget *ui;
+
     // 更新界面数据
     void update(SurfaceMesh::Model* model);
 
@@ -38,7 +40,7 @@ public:
             Vector3d scale, AlignedBox3d bbox);
 
 private:
-    Ui::TransformationWidget *ui;
+
 
     inline double rad2ang(const double& rad) {return rad * 180 / PI;}
     inline double ang2rad(const double& ang) {return ang * PI / 180;}

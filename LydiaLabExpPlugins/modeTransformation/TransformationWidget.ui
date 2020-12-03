@@ -303,6 +303,20 @@
     </widget>
    </item>
    <item>
+    <widget class="QPushButton" name="pushButtonSetModelCenterAsOrigin">
+     <property name="text">
+      <string>Set Model Center As Origin</string>
+     </property>
+    </widget>
+   </item>
+   <item>
+    <widget class="QPushButton" name="pushButtonSetAxisOriginAsOrigin">
+     <property name="text">
+      <string>Set Axis Origin As Origin</string>
+     </property>
+    </widget>
+   </item>
+   <item>
     <widget class="QPushButton" name="pushButtonAccept">
      <property name="text">
       <string>Accept</string>

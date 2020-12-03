@@ -34,3 +34,33 @@ void transformation(Surface_mesh *mesh, Eigen::Matrix4d transformMatrix)
     }
 
 }
+
+/**
+ * @brief setModelOrigin
+ * 修改模型局部坐标的中心点
+ * @param model
+ * @param newOrigin
+ */
+void setModelOrigin(SurfaceMesh::SurfaceMeshModel *model, Eigen::Vector3d newOrigin)
+{
+    VertexProperty vpoints = model->vertex_coordinates();
+    for(Vertex vertex : model->vertices()) {
+        vpoints[vertex] = vpoints[vertex] - newOrigin;
+    }
+    model->updateBoundingBox();
+}
+
+/**
+ * @brief equal
+ * 判断两个顶点是否相等
+ * @param v1
+ * @param v2
+ * @return
+ */
+bool equal(const Eigen::Vector3d &v1, const Eigen::Vector3d &v2)
+{
+    double ZERO = 0e-6;
+    return fabs(v1.x() - v2.x()) < ZERO
+            && fabs(v1.y() - v2.y()) < ZERO
+            && fabs(v1.z() - v2.z()) < ZERO;
+}
