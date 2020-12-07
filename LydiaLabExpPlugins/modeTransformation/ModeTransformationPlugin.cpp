@@ -104,7 +104,7 @@ void ModeTransformationPlugin::initConnections()
 
         // 获得 世界坐标 和 局部坐标 之间的转换矩阵
         Matrix4d transMat = mesh()->getTransformationMatrix();
-        Matrix4d invTransMat = transMat.inverse();
+//        Matrix4d invTransMat = transMat.inverse();
 
         // Center 的两种坐标
         Vector4d localCenter4d;
@@ -116,12 +116,14 @@ void ModeTransformationPlugin::initConnections()
         worldPosition4d << mesh()->getPosition(), 1;
 
         Vector4d localOrigin4d(0, 0, 0, 1);
-        Vector4d worldOrigin4d = invTransMat * localOrigin4d;
+//        Vector4d worldOrigin4d = invTransMat * localOrigin4d;
 
         // 模型顶点的坐标变换
         setModelOrigin(mesh(), localCenter4d.segment(0, 3));
-        mesh()->setPosition((worldPosition4d + (worldCenter4d - worldOrigin4d)).segment(0, 3));
+        mesh()->setPosition(worldCenter4d.segment(0, 3));
         transformationWidget->updateUI(mesh()->getPosition(), mesh()->getRotation(), mesh()->getScale(), mesh()->bbox());
+        transformationWidget->ui->pushButtonSetModelCenterAsOrigin->setEnabled(false);
+        transformationWidget->ui->pushButtonSetAxisOriginAsOrigin->setEnabled(true);
     });
 
 
@@ -143,6 +145,8 @@ void ModeTransformationPlugin::initConnections()
         setModelOrigin(mesh(), (localOrigin4d - localOldOrigin4d).segment(0, 3));
         mesh()->setPosition((worldOrigin4d).segment(0, 3));
         transformationWidget->updateUI(mesh()->getPosition(), mesh()->getRotation(), mesh()->getScale(), mesh()->bbox());
+        transformationWidget->ui->pushButtonSetModelCenterAsOrigin->setEnabled(true);
+        transformationWidget->ui->pushButtonSetAxisOriginAsOrigin->setEnabled(false);
     });
 }
 

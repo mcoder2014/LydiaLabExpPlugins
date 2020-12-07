@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>483</width>
+    <width>599</width>
     <height>665</height>
    </rect>
   </property>
@@ -74,6 +74,9 @@
        <widget class="QDoubleSpinBox" name="doubleSpinBoxPosZ">
         <property name="minimum">
          <double>-1000000.000000000000000</double>
+        </property>
+        <property name="maximum">
+         <double>10000000.000000000000000</double>
         </property>
         <property name="singleStep">
          <double>0.100000000000000</double>

@@ -90,9 +90,9 @@ void TransformationWidget::updateUI(
 
     Vector3d extension = bbox.max() - bbox.min();
 
-    ui->doubleSpinBoxBboxX->setValue(extension.x());
-    ui->doubleSpinBoxBboxY->setValue(extension.y());
-    ui->doubleSpinBoxBboxZ->setValue(extension.z());
+    ui->doubleSpinBoxBboxX->setValue(extension.x() * scale.x());
+    ui->doubleSpinBoxBboxY->setValue(extension.y() * scale.y());
+    ui->doubleSpinBoxBboxZ->setValue(extension.z() * scale.z());
 
     ui->doubleSpinBoxScaleX->setValue(scale.x());
     ui->doubleSpinBoxScaleY->setValue(scale.y());
