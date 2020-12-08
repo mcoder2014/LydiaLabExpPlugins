@@ -17,7 +17,8 @@ void FilterCopyMeshPlugin::applyFilter(RichParameterSet *richParameterSet)
 
     SurfaceMeshModel* model = safeCast(document()->selectedModel());
     SurfaceMeshModel* newModel = new SurfaceMeshModel;
-    newModel->Surface_mesh::assign(*model);
+    newModel->SurfaceMeshModel::assign(*model);
+    newModel->setRenderer(nullptr);
     newModel->updateBoundingBox();
     newModel->name = newName;
 

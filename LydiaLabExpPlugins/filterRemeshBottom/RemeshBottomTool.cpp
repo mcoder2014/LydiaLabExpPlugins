@@ -380,3 +380,42 @@ SurfaceMesh::SurfaceMeshModel *debugSampleGrid(std::vector<std::vector<Eigen::Ve
 
     return model;
 }
+
+/**
+ * @brief remeshBottomLocal
+ * @param srcModel
+ * @param worldDirection
+ * @param WorldIntervalX
+ * @param WorldIntervalY
+ * @return
+ */
+SurfaceMesh::SurfaceMeshModel *remeshBottomLocal(
+        SurfaceMesh::SurfaceMeshModel *srcModel,
+        Eigen::Vector3d worldDirection,
+        double WorldIntervalX, double WorldIntervalY)
+{
+    Eigen::Matrix4d transMat = srcModel->getTransformationMatrix();
+    Eigen::Matrix4d invTransMat = transMat.inverse();
+
+    Eigen::Vector4d localIntervalX4d;
+    Eigen::Vector4d localIntervalY4d;
+    localIntervalX4d << WorldIntervalX, 0, 0, 1;
+    localIntervalY4d << 0, WorldIntervalY, 0, 1;
+
+    localIntervalX4d = invTransMat * localIntervalX4d;
+    localIntervalY4d = invTransMat * localIntervalY4d;
+
+    double localIntervalX = localIntervalX4d.norm();
+    double localIntervalY = localIntervalY4d.norm();
+
+    Eigen::Vector4d localDirection4D;
+    localDirection4D << worldDirection, 1;
+    localDirection4D = invTransMat * localDirection4D;
+
+    SurfaceMeshModel* targetModel = remeshBottom(
+                srcModel,
+                localDirection4D.segment(0, 3),
+                localIntervalX, localIntervalY);
+    targetModel->Starlab::Model::assign(*srcModel);
+    return targetModel;
+}

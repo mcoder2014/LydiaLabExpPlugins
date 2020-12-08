@@ -15,7 +15,7 @@ FilterMirrorPlugin::FilterMirrorPlugin()
 void FilterMirrorPlugin::applyFilter(RichParameterSet *richParameterSet)
 {
     std::vector<Eigen::Vector3d> face(3, Eigen::Vector3d::Zero());
-    Starlab::Model *model = document()->selectedModel();
+    SurfaceMeshModel *model = safeCast(document()->selectedModel());
     // 获得参数
     if(richParameterSet == nullptr
             || model == nullptr
@@ -35,6 +35,15 @@ void FilterMirrorPlugin::applyFilter(RichParameterSet *richParameterSet)
     face[2].x() = static_cast<double>(richParameterSet->getFloat("V2_x"));
     face[2].y() = static_cast<double>(richParameterSet->getFloat("V2_y"));
     face[2].z() = static_cast<double>(richParameterSet->getFloat("V2_z"));
+
+    // 坐标系转换
+    Eigen::Matrix4d transMat = model->getTransformationMatrix().inverse();
+    Eigen::Vector4d tmpPoint;
+    for(int i = 0; i < 3; i++) {
+        tmpPoint << face[i], 1;
+        tmpPoint = transMat * tmpPoint;
+        face[i] = tmpPoint.segment(0, 3);
+    }
 
     // 执行镜像操作
     mirror(safeCast(model), face);

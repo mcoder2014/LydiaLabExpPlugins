@@ -12,6 +12,12 @@
 using Eigen::Vector3d;
 using Eigen::Matrix4d;
 
+// 将射线转化到模型空间
+SurfaceMesh::SurfaceMeshModel *remeshBottomLocal(
+        SurfaceMesh::SurfaceMeshModel* srcModel,
+        Eigen::Vector3d worldDirection,
+        double WorldIntervalX, double WorldIntervalY);
+
 // 用采样点重新构建网格模型
 SurfaceMesh::SurfaceMeshModel *remeshBottom(
         std::vector<std::vector<Vector3d>>& sampleGrid,

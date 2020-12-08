@@ -23,7 +23,7 @@ void FilterRemeshBottomPlugin::applyFilter(RichParameterSet *richParameterSet)
     direction.z() = static_cast<double>(richParameterSet->getFloat("diectZ"));
 
     // 应用重建模型算法
-    SurfaceMeshModel* model =  remeshBottom(
+    SurfaceMeshModel* model =  remeshBottomLocal(
                 safeCast(document()->selectedModel()), direction, intervalX, intervalY);
 
     model->name = QString("%1_d_%2_%3_%4_i_%5_%6")
@@ -33,6 +33,8 @@ void FilterRemeshBottomPlugin::applyFilter(RichParameterSet *richParameterSet)
             .arg(direction.z())
             .arg(intervalX)
             .arg(intervalY);
+    model->setRenderer(nullptr);
+    model->updateBoundingBox();
     document()->addModel(model);
 }
 

@@ -28,13 +28,11 @@ void FilterRevertFaceNormalPlugin::applyFilter(RichParameterSet *)
         tmp->add_face(vFace);
     }
 
-    document()->pushBusy();
-    model->assign(*tmp);
+    model->Surface_mesh::assign(*tmp);
     delete tmp;
 
     /// 更新法线
     model->updateBoundingBox();
     model->update_vertex_normals();
     model->update_face_normals();
-    document()->popBusy();
 }
