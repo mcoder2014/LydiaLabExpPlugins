@@ -42,11 +42,31 @@ void ModeFixPlugin::resume()
     modePluginDockWidget->setVisible(true);
 }
 
+/**
+ * @brief ModeFixPlugin::apply
+ * 连接网格的上表面和下表面，涉及到网格的坐标系转换
+ * 最终以下表面的坐标系为准
+ * 1. 上表面转换到世界坐标系
+ * 2. 上表面转换到下表面坐标系
+ * 3. 生成的新网格模型按照下表面的坐标系
+ */
 void ModeFixPlugin::apply()
 {
+    /// 将上表面转移到下表面坐标系
+    SurfaceMeshModel* topSurfaceClone = new SurfaceMeshModel;
+    topSurfaceClone->assign(*topSurface);
+
+    Matrix4d bottomTransMat = bottomSurface->getTransformationMatrix();
+    Matrix4d topTransMat = topSurfaceClone->getTransformationMatrix();
+    Matrix4d transMat = (bottomTransMat.inverse()) * topTransMat;
+    transformation(topSurfaceClone, transMat);
+
     SurfaceMeshModel* model = fixHole(
-                topSurface, bottomSurface,
+                topSurfaceClone, bottomSurface,
                 modeFixWidget->ui->spinBoxPointsNumber->value());
+
+    // 释放 topSurfaceClone
+    delete topSurfaceClone;
 
     model->updateBoundingBox();
     model->update_face_normals();
