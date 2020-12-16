@@ -4,6 +4,7 @@ SUBDIRS += \
     filterCopyMesh \
     filterMinimalSurface \
     filterMirror \
+    filterOffsetSurface \
     filterRemeshBottom \
     filterRevertFaceNormal \
     modeDebug \
