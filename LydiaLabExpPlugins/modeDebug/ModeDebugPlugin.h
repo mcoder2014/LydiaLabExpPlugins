@@ -45,9 +45,14 @@ private:
     void releaseConnections();
 
 public slots:
+    // 更新顶点法线
     void updateVertexNormals();
+    // 更新面法线
     void updateFaceNormals();
+    // 更新包围盒
     void updateBoundingBox();
+    // 移除离散顶点
+    void removeUnconnectedVertex();
 };
 
 #endif // MODEDEBUGPLUGIN_H

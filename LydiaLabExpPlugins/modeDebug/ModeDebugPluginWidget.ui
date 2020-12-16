@@ -35,6 +35,13 @@
      </property>
     </widget>
    </item>
+   <item>
+    <widget class="QPushButton" name="pushButtonRemoveUnconnectedFaces">
+     <property name="text">
+      <string>remove unconnected faces</string>
+     </property>
+    </widget>
+   </item>
   </layout>
  </widget>
  <resources/>
