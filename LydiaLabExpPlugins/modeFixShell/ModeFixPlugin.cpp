@@ -1,5 +1,7 @@
 #include "ModeFixPlugin.h"
 
+#include <algorithm/CoordinateTool.h>
+
 #include "FixHoleTool.h"
 #include "ui_ModeFixWidget.h"
 
