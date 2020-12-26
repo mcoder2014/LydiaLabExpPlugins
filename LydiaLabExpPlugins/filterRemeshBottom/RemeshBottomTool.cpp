@@ -5,10 +5,13 @@
 
 #include <Eigen/Geometry>
 
+#include "Delaunator.h"
+
 using Eigen::Vector3d;
 using Eigen::Matrix4d;
 using SurfaceMesh::SurfaceMeshModel;
 using SurfaceMesh::Point;
+using SurfaceMesh::Vertex;
 using std::vector;
 using std::map;
 using std::pair;
@@ -267,7 +270,7 @@ Eigen::Vector3d getLowestPoint(Eigen::MatrixXd &pointsMatrix)
  * @param j
  * @param indexMap
  */
-void addFace(SurfaceMeshModel *model, int i, int j, map<pair<int, int>, int>& indexMap){
+static void addFace(SurfaceMeshModel *model, int i, int j, map<pair<int, int>, int>& indexMap){
 
     /// lambda 查找指定顶点的编号
     auto getVertexIndex = [&indexMap](int i, int j) {
@@ -299,6 +302,38 @@ void addFace(SurfaceMeshModel *model, int i, int j, map<pair<int, int>, int>& in
 }
 
 /**
+ * @brief addFacesUsingDelaunator
+ * 使用 Delauntor 方法建立网格链接
+ * 先将有交汇的顶点列出，然后从二维角度建立三维链接
+ * @param model
+ */
+static void addFacesUsingDelaunator(SurfaceMeshModel *model)
+{
+    size_t numVertices = model->n_vertices();
+    vector<double> coords(2 * numVertices, 0);
+    Surface_mesh::Vertex_property<Vector3d> vpoints = model->vertex_coordinates();
+
+    for(Vertex vertex : model->vertices()){
+        coords[2 * vertex.idx()] = vpoints[vertex].x();
+        coords[2 * vertex.idx() + 1] = vpoints[vertex].y();
+    }
+
+    // 计算三角面片链接
+    delaunator::Delaunator delau(coords);
+
+    // 添加面片
+    size_t numFaces = delau.triangles.size();
+    vector<Vertex> face;
+    for(int i = 0; i < numFaces; i+=3){
+        face.clear();
+        face.push_back(Vertex(delau.triangles[i]));
+        face.push_back(Vertex(delau.triangles[i + 1]));
+        face.push_back(Vertex(delau.triangles[i + 2]));
+        model->add_face(face);
+    }
+}
+
+/**
  * @brief remeshBottom
  * 将采样矩阵的顶点沿着方向求交点，remesh
  * 1. 对每个顶点与 Octree 求交点
@@ -324,6 +359,7 @@ SurfaceMesh::SurfaceMeshModel *remeshBottom(
     size_t countY = sampleGrid[0].size();
     int faceIndex;
 
+    /// 将相交顶点加入到网格
     for(size_t i = 0; i < countX; i++) {
         for(size_t j = 0; j < countY; j++) {
             Ray ray(sampleGrid[i][j], direction, 0.000001);
@@ -337,12 +373,14 @@ SurfaceMesh::SurfaceMeshModel *remeshBottom(
         }
     }
 
-    // 建立网格链接
-    for(int i = 0; i < static_cast<int>(countX - 1); i++) {
-        for(int j = 0; j < static_cast<int>(countY - 1); j++) {
-            addFace(model, i, j, indexMap);
-        }
-    }
+    addFacesUsingDelaunator(model);
+
+//    // 建立网格链接
+//    for(int i = 0; i < static_cast<int>(countX - 1); i++) {
+//        for(int j = 0; j < static_cast<int>(countY - 1); j++) {
+//            addFace(model, i, j, indexMap);
+//        }
+//    }
 
     return model;
 }

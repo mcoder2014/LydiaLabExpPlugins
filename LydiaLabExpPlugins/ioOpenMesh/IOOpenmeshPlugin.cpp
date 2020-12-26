@@ -2,6 +2,8 @@
 
 #include <OpenMesh/Core/IO/MeshIO.hh>
 
+#include <algorithm/CoordinateTool.h>
+
 #include "Mesh.h"
 #include "Convertor.h"
 
@@ -38,6 +40,11 @@ Starlab::Model *IOOpenmeshPlugin::open(QString path)
 void IOOpenmeshPlugin::save(Model * model, QString path)
 {
     SurfaceMeshModel* surfaceMeshModel = SurfaceMesh::safeCast(model);
+
+    // 坐标系切换到世界坐标系
+    Matrix4d transMat = surfaceMeshModel->getTransformationMatrix();
+    transformation(surfaceMeshModel, transMat);
+
     Convertor convertor;
     Mesh mesh = convertor.surfaceMeshModel2mesh(*surfaceMeshModel);
 
