@@ -69,9 +69,12 @@ SurfaceMesh::SurfaceMeshModel *remeshBottom(SurfaceMeshModel* srcModel,
                 boundingBox, intervalX, intervalY, depth);
     transform(sampleGrid, transformaMatrix.inverse());
 
+    /// maxEdge
+    double maxEdge = 10 * std::max(intervalX, intervalY);
+
     /// 重建网格
     Octree octree(srcModel);
-    return remeshBottom(sampleGrid, direction, octree);
+    return remeshBottom(sampleGrid, direction, octree, maxEdge);
 }
 
 //bool isZero(double value) {return value < 0.000001 && value > -0.000001;}
@@ -307,7 +310,7 @@ static void addFace(SurfaceMeshModel *model, int i, int j, map<pair<int, int>, i
  * 先将有交汇的顶点列出，然后从二维角度建立三维链接
  * @param model
  */
-static void addFacesUsingDelaunator(SurfaceMeshModel *model)
+void addFacesUsingDelaunator(SurfaceMeshModel *model, double maxEdge)
 {
     size_t numVertices = model->n_vertices();
     vector<double> coords(2 * numVertices, 0);
@@ -321,6 +324,20 @@ static void addFacesUsingDelaunator(SurfaceMeshModel *model)
     // 计算三角面片链接
     delaunator::Delaunator delau(coords);
 
+    auto length = [&](Vertex v0, Vertex v1) -> double {
+        Vector3d p0 = vpoints[v0];
+        Vector3d p1 = vpoints[v1];
+        return (p1-p0).norm();
+    };
+
+    auto checkMaxEdge = [&](vector<Vertex>& face) -> bool{
+        bool res = true;
+        res &= length(face[0], face[1]) < maxEdge;
+        res &= length(face[1], face[2]) < maxEdge;
+        res &= length(face[2], face[0]) < maxEdge;
+        return res;
+    };
+
     // 添加面片
     size_t numFaces = delau.triangles.size();
     vector<Vertex> face;
@@ -329,6 +346,11 @@ static void addFacesUsingDelaunator(SurfaceMeshModel *model)
         face.push_back(Vertex(delau.triangles[i]));
         face.push_back(Vertex(delau.triangles[i + 1]));
         face.push_back(Vertex(delau.triangles[i + 2]));
+
+        if(!checkMaxEdge(face)) {
+            continue;
+        }
+
         model->add_face(face);
     }
 }
@@ -345,10 +367,9 @@ static void addFacesUsingDelaunator(SurfaceMeshModel *model)
  * @param octree
  * @return
  */
-SurfaceMesh::SurfaceMeshModel *remeshBottom(
-        std::vector<std::vector<Eigen::Vector3d> > &sampleGrid,
+SurfaceMesh::SurfaceMeshModel *remeshBottom(std::vector<std::vector<Eigen::Vector3d> > &sampleGrid,
         Eigen::Vector3d direction,
-        Octree &octree)
+        Octree &octree, double maxEdge)
 {
     SurfaceMeshModel *model = new SurfaceMeshModel;
 
@@ -373,7 +394,7 @@ SurfaceMesh::SurfaceMeshModel *remeshBottom(
         }
     }
 
-    addFacesUsingDelaunator(model);
+    addFacesUsingDelaunator(model, maxEdge);
 
 //    // 建立网格链接
 //    for(int i = 0; i < static_cast<int>(countX - 1); i++) {

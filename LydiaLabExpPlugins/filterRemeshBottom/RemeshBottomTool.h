@@ -22,7 +22,8 @@ SurfaceMesh::SurfaceMeshModel *remeshBottomLocal(
 SurfaceMesh::SurfaceMeshModel *remeshBottom(
         std::vector<std::vector<Vector3d>>& sampleGrid,
         Vector3d direction,
-        Octree& octree);
+        Octree& octree,
+        double maxEdge);
 
 // 重新构建模型底部的网格
 SurfaceMesh::SurfaceMeshModel *remeshBottom(
@@ -48,5 +49,8 @@ Eigen::AlignedBox2d getBoundingBox2d(Eigen::MatrixXd& pointsMatrix);
 
 // 找到最低的顶点
 Eigen::Vector3d getLowestPoint(Eigen::MatrixXd& pointsMatrix);
+
+// 使用 Delaunator 方法重建网格
+void addFacesUsingDelaunator(SurfaceMesh::SurfaceMeshModel *model, double maxEdge);
 
 #endif // REMESHBOTTOMTOOL_H
