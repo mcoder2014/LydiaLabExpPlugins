@@ -5,6 +5,8 @@
 
 #include <Eigen/Geometry>
 
+#include <algorithm/CoordinateTool.h>
+
 #include "Delaunator.h"
 
 using Eigen::Vector3d;
@@ -46,9 +48,7 @@ SurfaceMesh::SurfaceMeshModel *remeshBottom(SurfaceMeshModel* srcModel,
     // 构造顶点矩阵
     Eigen::MatrixXd pointsMatrix = Eigen::MatrixXd::Ones(4, srcModel->n_vertices());
     for(SurfaceMeshModel::Vertex vertex : srcModel->vertices()) {
-        pointsMatrix(0, vertex.idx()) = verticesProperty[vertex].x();
-        pointsMatrix(1, vertex.idx()) = verticesProperty[vertex].y();
-        pointsMatrix(2, vertex.idx()) = verticesProperty[vertex].z();
+        pointsMatrix.block(0, vertex.idx(), 3, 1) = verticesProperty[vertex];
     }
 
     // 执行坐标系转化
@@ -138,9 +138,7 @@ Eigen::Matrix4d getTransformMatrix(Eigen::Vector3d direction, Eigen::Vector3d or
     OY.normalize();
     OZ.normalize();
 
-    Matrix4d transformMatrix = Matrix4d::Identity();
-    transformMatrix.topLeftCorner(3,3) << OX, OY, OZ;
-    return transformMatrix.transpose().inverse();
+    return getTransformMatrix(OX, OY, OZ, origin);
 }
 
 /**
@@ -200,9 +198,7 @@ void transform(std::vector<std::vector<Eigen::Vector3d> > &sampleGrid, Eigen::Ma
     for(size_t i = 0; i < countX; i++) {
         for(size_t j = 0; j < countY; j++) {
             idx = i * countY + j;
-            pointsMatrix(0, static_cast<int>(idx)) = sampleGrid[i][j].x();
-            pointsMatrix(1, static_cast<int>(idx)) = sampleGrid[i][j].y();
-            pointsMatrix(2, static_cast<int>(idx)) = sampleGrid[i][j].z();
+            pointsMatrix.block(0, idx, 3, 1) = sampleGrid[i][j];
         }
     }
 
@@ -211,9 +207,7 @@ void transform(std::vector<std::vector<Eigen::Vector3d> > &sampleGrid, Eigen::Ma
     for(size_t i = 0; i < countX; i++) {
         for(size_t j = 0; j < countY; j++) {
             idx = i * countY + j;
-            sampleGrid[i][j].x() = pointsMatrix(0, static_cast<int>(idx));
-            sampleGrid[i][j].y() = pointsMatrix(1, static_cast<int>(idx));
-            sampleGrid[i][j].z() = pointsMatrix(2, static_cast<int>(idx));
+            sampleGrid[i][j] = pointsMatrix.block(0, idx, 3, 1);
         }
     }
 }
@@ -229,8 +223,7 @@ Eigen::AlignedBox2d getBoundingBox2d(Eigen::MatrixXd &pointsMatrix)
     int size = static_cast<int>(pointsMatrix.cols());
     Eigen::Vector2d tmpPoint;
     for(int i = 0; i < size; i++) {
-        tmpPoint.x() = pointsMatrix(0, i);
-        tmpPoint.y() = pointsMatrix(1, i);
+        tmpPoint = pointsMatrix.block(0, i, 2, 1);
         boungdingBox.extend(tmpPoint);
     }
     return boungdingBox;
@@ -256,11 +249,7 @@ Eigen::Vector3d getLowestPoint(Eigen::MatrixXd &pointsMatrix)
         }
     }
 
-    Eigen::Vector3d lowestPoint;
-    lowestPoint.x() = pointsMatrix(0, idx);
-    lowestPoint.y() = pointsMatrix(1, idx);
-    lowestPoint.z() = pointsMatrix(2, idx);
-
+    Eigen::Vector3d lowestPoint = pointsMatrix.block(0, idx, 3, 1);
     return lowestPoint;
 }
 
@@ -339,7 +328,7 @@ void addFacesUsingDelaunator(SurfaceMeshModel *model, double maxEdge)
     };
 
     // 添加面片
-    size_t numFaces = delau.triangles.size();
+    int numFaces = static_cast<int>(delau.triangles.size());
     vector<Vertex> face;
     for(int i = 0; i < numFaces; i+=3){
         face.clear();
@@ -453,6 +442,7 @@ SurfaceMesh::SurfaceMeshModel *remeshBottomLocal(
         Eigen::Vector3d worldDirection,
         double WorldIntervalX, double WorldIntervalY)
 {
+    /// 将世界坐标系下的间距转换到局部坐标系
     Eigen::Matrix4d transMat = srcModel->getTransformationMatrix();
     Eigen::Matrix4d invTransMat = transMat.inverse();
 
@@ -464,9 +454,11 @@ SurfaceMesh::SurfaceMeshModel *remeshBottomLocal(
     localIntervalX4d = invTransMat * localIntervalX4d;
     localIntervalY4d = invTransMat * localIntervalY4d;
 
+    // 局部坐标系间距
     double localIntervalX = localIntervalX4d.norm();
     double localIntervalY = localIntervalY4d.norm();
 
+    // 局部坐标系方向向量
     Eigen::Vector4d localDirection4D;
     localDirection4D << worldDirection, 1;
     localDirection4D = invTransMat * localDirection4D;
@@ -475,6 +467,8 @@ SurfaceMesh::SurfaceMeshModel *remeshBottomLocal(
                 srcModel,
                 localDirection4D.segment(0, 3),
                 localIntervalX, localIntervalY);
+
+    // 复制原模型的 transform 数据
     targetModel->Starlab::Model::assign(*srcModel);
     return targetModel;
 }

@@ -6,7 +6,6 @@
 #include <parameters/RichParameterWidget.h>
 
 #include "TransformationWidget.h"
-#include "ui_TransformationWidget.h"
 #include "TransformationTool.h"
 
 using Eigen::Vector4d;
@@ -93,7 +92,7 @@ void ModeTransformationPlugin::initConnections()
             Qt::UniqueConnection);
 
     // 更新坐标原点到模型的中心
-    connect(transformationWidget->ui->pushButtonSetModelCenterAsOrigin, &QPushButton::clicked,
+    connect(transformationWidget->pushButtonSetModelCenterAsOrigin, &QPushButton::clicked,
             [&](){
         // 减少不必要的调用
         Vector3d localCenter3d = mesh()->bbox().center();
@@ -104,7 +103,6 @@ void ModeTransformationPlugin::initConnections()
 
         // 获得 世界坐标 和 局部坐标 之间的转换矩阵
         Matrix4d transMat = mesh()->getTransformationMatrix();
-//        Matrix4d invTransMat = transMat.inverse();
 
         // Center 的两种坐标
         Vector4d localCenter4d;
@@ -116,19 +114,18 @@ void ModeTransformationPlugin::initConnections()
         worldPosition4d << mesh()->getPosition(), 1;
 
         Vector4d localOrigin4d(0, 0, 0, 1);
-//        Vector4d worldOrigin4d = invTransMat * localOrigin4d;
 
         // 模型顶点的坐标变换
         setModelOrigin(mesh(), localCenter4d.segment(0, 3));
         mesh()->setPosition(worldCenter4d.segment(0, 3));
         transformationWidget->updateUI(mesh()->getPosition(), mesh()->getRotation(), mesh()->getScale(), mesh()->bbox());
-        transformationWidget->ui->pushButtonSetModelCenterAsOrigin->setEnabled(false);
-        transformationWidget->ui->pushButtonSetAxisOriginAsOrigin->setEnabled(true);
+        transformationWidget->pushButtonSetModelCenterAsOrigin->setEnabled(false);
+        transformationWidget->pushButtonSetAxisOriginAsOrigin->setEnabled(true);
     });
 
 
     // 更新坐标原点到坐标系原点
-    connect(transformationWidget->ui->pushButtonSetAxisOriginAsOrigin, &QPushButton::clicked,
+    connect(transformationWidget->pushButtonSetAxisOriginAsOrigin, &QPushButton::clicked,
             [&](){
         // 获得 世界坐标 和 局部坐标 之间的转换矩阵
         Matrix4d transMat = mesh()->getTransformationMatrix();
@@ -145,9 +142,65 @@ void ModeTransformationPlugin::initConnections()
         setModelOrigin(mesh(), (localOrigin4d - localOldOrigin4d).segment(0, 3));
         mesh()->setPosition((worldOrigin4d).segment(0, 3));
         transformationWidget->updateUI(mesh()->getPosition(), mesh()->getRotation(), mesh()->getScale(), mesh()->bbox());
-        transformationWidget->ui->pushButtonSetModelCenterAsOrigin->setEnabled(true);
-        transformationWidget->ui->pushButtonSetAxisOriginAsOrigin->setEnabled(false);
+        transformationWidget->pushButtonSetModelCenterAsOrigin->setEnabled(true);
+        transformationWidget->pushButtonSetAxisOriginAsOrigin->setEnabled(false);
     });
+
+    connectTrigger();
+}
+
+void ModeTransformationPlugin::connectTrigger()
+{
+    /// Position
+    connect(transformationWidget->doubleSpinBoxPosX, SIGNAL(valueChanged(double)),
+            this, SLOT(apply()), Qt::UniqueConnection);
+    connect(transformationWidget->doubleSpinBoxPosY, SIGNAL(valueChanged(double)),
+            this, SLOT(apply()), Qt::UniqueConnection);
+    connect(transformationWidget->doubleSpinBoxPosZ, SIGNAL(valueChanged(double)),
+            this, SLOT(apply()), Qt::UniqueConnection);
+
+    /// Rotation
+    connect(transformationWidget->doubleSpinBoxRotX, SIGNAL(valueChanged(double)),
+            this, SLOT(apply()), Qt::UniqueConnection);
+    connect(transformationWidget->doubleSpinBoxRotY, SIGNAL(valueChanged(double)),
+            this, SLOT(apply()), Qt::UniqueConnection);
+    connect(transformationWidget->doubleSpinBoxRotZ, SIGNAL(valueChanged(double)),
+            this, SLOT(apply()), Qt::UniqueConnection);
+
+    /// Scale
+    connect(transformationWidget->doubleSpinBoxBboxX, SIGNAL(valueChanged(double)),
+            this, SLOT(apply()), Qt::UniqueConnection);
+    connect(transformationWidget->doubleSpinBoxBboxY, SIGNAL(valueChanged(double)),
+            this, SLOT(apply()), Qt::UniqueConnection);
+    connect(transformationWidget->doubleSpinBoxBboxZ, SIGNAL(valueChanged(double)),
+            this, SLOT(apply()), Qt::UniqueConnection);
+}
+
+void ModeTransformationPlugin::disconnectTrigger()
+{
+    /// Position
+    disconnect(transformationWidget->doubleSpinBoxPosX, SIGNAL(valueChanged(double)),
+            this, SLOT(apply()));
+    disconnect(transformationWidget->doubleSpinBoxPosY, SIGNAL(valueChanged(double)),
+            this, SLOT(apply()));
+    disconnect(transformationWidget->doubleSpinBoxPosZ, SIGNAL(valueChanged(double)),
+            this, SLOT(apply()));
+
+    /// Rotation
+    disconnect(transformationWidget->doubleSpinBoxRotX, SIGNAL(valueChanged(double)),
+            this, SLOT(apply()));
+    disconnect(transformationWidget->doubleSpinBoxRotY, SIGNAL(valueChanged(double)),
+            this, SLOT(apply()));
+    disconnect(transformationWidget->doubleSpinBoxRotZ, SIGNAL(valueChanged(double)),
+            this, SLOT(apply()));
+
+    /// Scale
+    disconnect(transformationWidget->doubleSpinBoxBboxX, SIGNAL(valueChanged(double)),
+            this, SLOT(apply()));
+    disconnect(transformationWidget->doubleSpinBoxBboxY, SIGNAL(valueChanged(double)),
+            this, SLOT(apply()));
+    disconnect(transformationWidget->doubleSpinBoxBboxZ, SIGNAL(valueChanged(double)),
+            this, SLOT(apply()));
 }
 
 /**
@@ -167,43 +220,59 @@ void ModeTransformationPlugin::releaseConnections()
  */
 void ModeTransformationPlugin::selectionChanged(Model *model)
 {
-    this->transformationWidget->update(model);
+    disconnectTrigger();
+
+    transformationWidget->update(model);
+
+    connectTrigger();
+}
+
+void ModeTransformationPlugin::apply()
+{
+    Vector3d position;
+    Vector3d rotation;
+    Vector3d size;
+
+    position.x() = transformationWidget->doubleSpinBoxPosX->value();
+    position.y() = transformationWidget->doubleSpinBoxPosY->value();
+    position.z() = transformationWidget->doubleSpinBoxPosZ->value();
+
+    rotation.x() = transformationWidget->ang2rad(transformationWidget->doubleSpinBoxRotX->value());
+    rotation.y() = transformationWidget->ang2rad(transformationWidget->doubleSpinBoxRotY->value());
+    rotation.z() = transformationWidget->ang2rad(transformationWidget->doubleSpinBoxRotZ->value());
+
+    size.x() = transformationWidget->doubleSpinBoxBboxX->value();
+    size.y() = transformationWidget->doubleSpinBoxBboxY->value();
+    size.z() = transformationWidget->doubleSpinBoxBboxZ->value();
+
+    applyTransform(position, rotation, size);
 }
 
 void ModeTransformationPlugin::applyTransform(
         Eigen::Vector3d position,
         Eigen::Vector3d rotation,
-        Eigen::Vector3d scale,
         Eigen::Vector3d size)
 {
-    SurfaceMeshModel* model = safeCast(document()->selectedModel());
+    SurfaceMeshModel* model = mesh();
     if(model == nullptr){
         std::cout << __FILE__ << __LINE__ << __PRETTY_FUNCTION__
                   << "model == nullptr" << std::endl;
         return;
     }
 
-//    Eigen::Matrix4d oldTransform = model->getTransformationMatrix();
     // 计算 Scale
-    Vector3d oldScale = model->getScale();
-    Vector3d oldSize = model->bbox().max()-model->bbox().min();
-    scale.x() = size.x()/oldSize.x() * oldScale.x();
-    scale.y() = size.y()/oldSize.y() * oldScale.y();
-    scale.z() = size.z()/oldSize.z() * oldScale.z();
+    Vector3d scale;
+    Vector3d bboxSize = model->bbox().max()-model->bbox().min();
+    scale.x() = size.x()/bboxSize.x();
+    scale.y() = size.y()/bboxSize.y();
+    scale.z() = size.z()/bboxSize.z();
 
     // 更新模型的数据
     model->setPosition(position);
     model->setRotation(rotation);
     model->setScale(scale);
 
-//    Eigen::Matrix4d transformMatrix = model->getTransformationMatrix();
-//    transformMatrix = transformMatrix * oldTransform.inverse();
-
-    // 执行变换
-//    transformation(model, transformMatrix);
-
     // 手动触发更新
-//    model->updateBoundingBox();
     drawArea()->updateGL();
     selectionChanged(model);
 }

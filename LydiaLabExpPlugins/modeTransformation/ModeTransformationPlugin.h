@@ -1,7 +1,6 @@
 #ifndef FILTERTRANSFORMATIONPLUGIN_H
 #define FILTERTRANSFORMATIONPLUGIN_H
 
-
 #include "interfaces/ModePluginDockWidget.h"
 #include "SurfaceMeshPlugins.h"
 
@@ -48,6 +47,10 @@ private:
 
     // 建立链接
     void initConnections();
+    // 修改数值，触发渲染更新
+    void connectTrigger();
+    // 断开修改数值触发渲染更新
+    void disconnectTrigger();
 
     // 断开链接
     void releaseConnections();
@@ -55,8 +58,8 @@ private:
 private slots:
     // 处理 Document 中当前选中的模型发生改变事件
     void selectionChanged(Model* model);
-    void applyTransform(Vector3d position, Vector3d rotation,
-                        Vector3d scale, Vector3d size);
+    void apply();
+    void applyTransform(Vector3d position, Vector3d rotation, Vector3d size);
 };
 
 #endif // FILTERTRANSFORMATIONPLUGIN_H

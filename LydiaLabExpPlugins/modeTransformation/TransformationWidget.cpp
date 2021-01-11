@@ -1,5 +1,5 @@
 #include "TransformationWidget.h"
-#include "ui_TransformationWidget.h"
+
 
 #include <iostream>
 
@@ -13,21 +13,14 @@ using namespace SurfaceMesh;
  * 2. 建立链接
  * @param parent
  */
-TransformationWidget::TransformationWidget(
-        QWidget *parent)
-            :QWidget(parent), ui(new Ui::TransformationWidget)
+TransformationWidget::TransformationWidget(QWidget *parent) :QWidget(parent)
 {
     // 构建 UI 样式
-    ui->setupUi(this);
-
-    // 当点击按钮时，发射应用变换信号
-    connect(ui->pushButtonAccept, SIGNAL(clicked(bool)),
-            this, SLOT(emitTransformationChanged()));
+    setupUi(this);
 }
 
 TransformationWidget::~TransformationWidget()
 {
-    delete ui;
 }
 
 /**
@@ -80,48 +73,21 @@ void TransformationWidget::updateUI(
         Eigen::Vector3d scale,
         Eigen::AlignedBox3d bbox)
 {
-    ui->doubleSpinBoxPosX->setValue(position.x());
-    ui->doubleSpinBoxPosY->setValue(position.y());
-    ui->doubleSpinBoxPosZ->setValue(position.z());
+    doubleSpinBoxPosX->setValue(position.x());
+    doubleSpinBoxPosY->setValue(position.y());
+    doubleSpinBoxPosZ->setValue(position.z());
 
-    ui->doubleSpinBoxRotX->setValue(rad2ang(rotation.x()));
-    ui->doubleSpinBoxRotY->setValue(rad2ang(rotation.y()));
-    ui->doubleSpinBoxRotZ->setValue(rad2ang(rotation.z()));
+    doubleSpinBoxRotX->setValue(rad2ang(rotation.x()));
+    doubleSpinBoxRotY->setValue(rad2ang(rotation.y()));
+    doubleSpinBoxRotZ->setValue(rad2ang(rotation.z()));
 
     Vector3d extension = bbox.max() - bbox.min();
 
-    ui->doubleSpinBoxBboxX->setValue(extension.x() * scale.x());
-    ui->doubleSpinBoxBboxY->setValue(extension.y() * scale.y());
-    ui->doubleSpinBoxBboxZ->setValue(extension.z() * scale.z());
+    doubleSpinBoxBboxX->setValue(extension.x() * scale.x());
+    doubleSpinBoxBboxY->setValue(extension.y() * scale.y());
+    doubleSpinBoxBboxZ->setValue(extension.z() * scale.z());
 
-    ui->doubleSpinBoxScaleX->setValue(scale.x());
-    ui->doubleSpinBoxScaleY->setValue(scale.y());
-    ui->doubleSpinBoxScaleZ->setValue(scale.z());
+    doubleSpinBoxScaleX->setValue(scale.x());
+    doubleSpinBoxScaleY->setValue(scale.y());
+    doubleSpinBoxScaleZ->setValue(scale.z());
 }
-
-void TransformationWidget::emitTransformationChanged()
-{
-    Vector3d position;
-    Vector3d rotation;
-    Vector3d scale;
-    Vector3d size;
-
-    position.x() = ui->doubleSpinBoxPosX->value();
-    position.y() = ui->doubleSpinBoxPosY->value();
-    position.z() = ui->doubleSpinBoxPosZ->value();
-
-    rotation.x() = ang2rad(ui->doubleSpinBoxRotX->value());
-    rotation.y() = ang2rad(ui->doubleSpinBoxRotY->value());
-    rotation.z() = ang2rad(ui->doubleSpinBoxRotZ->value());
-
-    scale.x() = ui->doubleSpinBoxScaleX->value();
-    scale.y() = ui->doubleSpinBoxScaleY->value();
-    scale.z() = ui->doubleSpinBoxScaleZ->value();
-
-    size.x() = ui->doubleSpinBoxBboxX->value();
-    size.y() = ui->doubleSpinBoxBboxY->value();
-    size.z() = ui->doubleSpinBoxBboxZ->value();
-
-    emit transformationChagned(position, rotation, scale, size);
-}
-

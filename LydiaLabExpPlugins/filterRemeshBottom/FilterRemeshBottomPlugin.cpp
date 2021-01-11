@@ -14,6 +14,7 @@ void FilterRemeshBottomPlugin::applyFilter(RichParameterSet *richParameterSet)
         throw new StarlabException("param is illegal");
     }
 
+    /// 获得参数
     double intervalX = static_cast<double>(richParameterSet->getFloat("intervalX"));
     double intervalY = static_cast<double>(richParameterSet->getFloat("intervalY"));
 
@@ -22,9 +23,8 @@ void FilterRemeshBottomPlugin::applyFilter(RichParameterSet *richParameterSet)
     direction.y() = static_cast<double>(richParameterSet->getFloat("diectY"));
     direction.z() = static_cast<double>(richParameterSet->getFloat("diectZ"));
 
-    // 应用重建模型算法
-    SurfaceMeshModel* model =  remeshBottomLocal(
-                safeCast(document()->selectedModel()), direction, intervalX, intervalY);
+    /// 应用重建方法
+    SurfaceMeshModel* model =  remeshBottomLocal(mesh(), direction, intervalX, intervalY);
 
     model->name = QString("%1_d_%2_%3_%4_i_%5_%6")
             .arg(document()->selectedModel()->name)

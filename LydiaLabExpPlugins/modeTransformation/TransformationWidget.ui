@@ -319,19 +319,6 @@
      </property>
     </widget>
    </item>
-   <item>
-    <widget class="QPushButton" name="pushButtonAccept">
-     <property name="text">
-      <string>Accept</string>
-     </property>
-     <property name="default">
-      <bool>false</bool>
-     </property>
-     <property name="flat">
-      <bool>false</bool>
-     </property>
-    </widget>
-   </item>
   </layout>
  </widget>
  <resources/>

@@ -1,5 +1,7 @@
 #include "MirrorTools.h"
 
+#include <algorithm/CoordinateTool.h>
+
 using std::vector;
 using Eigen::Vector3d;
 using Eigen::Matrix3d;
@@ -35,14 +37,7 @@ Eigen::Matrix4d getTransMatrix(vector<Eigen::Vector3d> &face)
     Vector3d i = k.cross(j);
     i.normalize();
 
-    /// 获得转换矩阵
-    Matrix4d transMat = Matrix4d::Identity();
-    transMat.topLeftCorner(3, 3) << i, j, k;
-
-    // 转置
-    transMat.transpose();
-
-    return transMat;
+    return getTransformMatrix(i, j, k, b);
 }
 
 /**
@@ -81,25 +76,22 @@ Eigen::Matrix4d getMiirorMatrix(vector<Eigen::Vector3d> &face)
  */
 void mirror(SurfaceMesh::SurfaceMeshModel *model, std::vector<Eigen::Vector3d> face)
 {
-    /// 进行镜像变换
+    /// 构建镜像矩阵变换数组
     Eigen::MatrixXd points = Eigen::MatrixXd::Ones(4, model->n_vertices());
     Surface_mesh::Vertex_property<Surface_mesh::Point> vpoints = model->vertex_coordinates();
     for(SurfaceMesh::SurfaceMeshModel::Vertex vertex : model->vertices()) {
-        points(0, vertex.idx()) = vpoints[vertex].x();
-        points(1, vertex.idx()) = vpoints[vertex].y();
-        points(2, vertex.idx()) = vpoints[vertex].z();
+        points.block(0, vertex.idx(), 3, 1) = vpoints[vertex];
     }
 
+    // 获得镜像变换的转换矩阵
     Eigen::Matrix4d transformMatrix = getMiirorMatrix(face);
     points = transformMatrix * points;
 
     /// 翻转面法向量
     SurfaceMesh::SurfaceMeshModel* tmp = new SurfaceMesh::SurfaceMeshModel();
     Surface_mesh::Point point;
-    for(int i = 0; i < model->n_vertices(); ++i) {
-        point.x() = points(0, i);
-        point.y() = points(1, i);
-        point.z() = points(2, i);
+    for(int i = 0; i < static_cast<int>(model->n_vertices()); ++i) {
+        point = points.block(0, i, 3, 1);
         tmp->add_vertex(point);
     }
 
@@ -117,10 +109,9 @@ void mirror(SurfaceMesh::SurfaceMeshModel *model, std::vector<Eigen::Vector3d> f
 
         tmp->add_face(vFace);
     }
+
     model->Surface_mesh::assign(*tmp);
     delete tmp;
-
-    /// 更新法线
     model->updateBoundingBox();
     model->update_vertex_normals();
     model->update_face_normals();
